@@ -16,7 +16,7 @@
         <div class="row">
             <nav class="navbar navbar-expand-lg bg-body-tertiary">
                 <div class="container-fluid">
-                    <a class="navbar-brand" href="#">SHOPHEHEHE</a>
+                    <a class="navbar-brand">shop thập cẩm</a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -25,20 +25,19 @@
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                                    aria-expanded="false">
+                                <a class="nav-link" href="/listuser" role="button" d aria-expanded="false">
                                     Người dùng
                                 </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="/addUser">Thêm người dùng </a></li>
+                                {{!-- <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="/views/listUser">Thêm người dùng </a></li>
                                     <li>
                                         <hr class="dropdown-divider">
                                     </li>
                                     <li><a class="dropdown-item" href="#">Danh sách người dùng</a></li>
-                                </ul>
+                                </ul> --}}
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#">Sản phẩm</a>
+                                <a class="nav-link" href="/listproduct" role="button">Sản phẩm</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#">Cài đặt</a>
@@ -49,63 +48,81 @@
                 </div>
             </nav>
         </div>
-        <div class="row">
-            <h1>Danh sách sản phẩm</h1>
+        <div class="text-center">
+            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                Thêm san pham
+            </button>
         </div>
-        <form action="addNewPr" method="get">
-            <button type="submit">Thêm sản phẩm</button>
-        </form>
-        <div class="row">
-            <div class="col-12">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">STT</th>
-                            <th scope="col">Tên sản phẩm</th>
-                            <th scope="col">Đơn giá</th>
-                            <th scope="col">Hình ảnh</th>
-                            <th scope="col">Màu sắc</th>
-                            <th scope="col">Loại sản phẩm</th>
-                            <th scope="col">Khách hàng</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each prData}}
-                        <tr>
-                            <th scope="row">{{@index}}</th>
-                            <td>{{namePr}}</td>
-                            <td>{{price}}</td>
-                            <td>{{imgPr}}</td>
-                            <td>{{color}}</td>
-                            <td>{{type}}</td>
-                            <td>{{nameUser}}</td>
-                            <td class="col-1">
-                                <form method="get" action="updatePr">
-                                    <button type="submit">Sửa</button>
-                                    <input value={{id}} class="d-none" name="prNum">
-                                </form>
-                                <form method="get" action="deletePr">
-                                    <button type="submit">Xóa</button>
-                                    <input value={{id}} class="d-none" name="prNum">
-                                </form>
-                            </td>
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
+        <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+            aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5 " id="staticBackdropLabel">Thêm san pham</h1>
+                        <button type="button" class="btn-close btn btn-light" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="add_pr" method="get">
+                            <label for="name" class="form-label">Tên san pham:</label>
+                            <input type="text" class="form-control" name="tensp" id="name">
+                            <label for="price" class="form-label">gia:</label>
+                            <input type="number" class="form-control" name="giasp" id="price">
+                            <label for="color" class="form-label">mau sac:</label>
+                            <input type="String" class="form-control" name="mausac" id="color">
+                            <label for="type" class="form-label">loai san pham</label>
+                            <input type="String" class="form-control" name="loaisp" id="type">
+                            <label for="namekh" class="form-label">ten khach hang</label>
+                            <input type="String" class="form-control" name="tenkh" id="namekh">
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-dark" data-bs-dismiss="modal"
+                                    value="cancel"></button>
+                                <button type="submit" class="btn btn-dark" value="xac nhan"></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
-        {{!-- <div class="rol">
-            <nav aria-label="Page navigation example">
-                <ul class="pagination">
-                    <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-                    <li class="page-item"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                </ul>
-            </nav>
-        </div> --}}
+        <table class="table">
+            <thead>
+                <tr>
+
+                    <th scope="col">STT</th>
+                    <th scope="col">Tên sản phẩm</th>
+                    <th scope="col">Đơn giá</th>
+                    {{!-- <th scope="col">Hình ảnh</th> --}}
+                    <th scope="col">Màu sắc</th>
+                    <th scope="col">Loại sản phẩm</th>
+                    <th scope="col">Khách hàng</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each prData}}
+                <tr>
+                    <th scope="row">{{@index}}</th>
+                    <td>{{tensp}}</td>
+                    <td>{{dongia}}</td>
+                    {{!-- <td>{{imgPr}}</td> --}}
+                    <td>{{mausac}}</td>
+                    <td>{{loaisp}}</td>
+                    <td>{{tenkh}}</td>
+                    <td class="modal-footer">
+                        <form method="get" action="up_pr">
+                            <button value={{_id}} class="btn btn-dark mb-2" name="prUpdate" type="submit">Sửa</button>
+
+                        </form>
+                        <form method="get" action="deletePr">
+                            <button value={{_id}} class="btn btn-dark mb-2" name="prDelete" type="submit"
+                                onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')">Xóa</button>
+
+                        </form>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
     </div>
 </body>
 

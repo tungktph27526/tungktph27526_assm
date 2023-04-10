@@ -1,225 +1,212 @@
 const express = require('express')
-const app = express()
-const port = 8000
-var fs = require('fs')
-const multer = require('multer');
-const bodyParser = require('body-parser')
-const path = require('path');
-const expressHbs = require('express-handlebars');
-
-
-app.use(express.static('public'));
-app.get('/', function (req, res) {
-  res.render('home', {
-    layout: 'login',
-    showFailLogin: false,
-  });
-})
+const mongoose = require('mongoose')
+const uri = 'mongodb+srv://tungktph27526:kttung2609@cluster0.mdas35v.mongodb.net/ASSM?retryWrites=true&w=majority'
+const expressHbs = require('express-handlebars')
+const mongodb = require('mongodb')
+const app = express();
+const user = require('./model/userModel')
+const ProductModel = require('./model/ProductModel');
+const request = require('request');
+// const session = require('session')
+const check = (item) => {
+  if (item == 1) {
+      return "Admin";
+  }
+  return "User";
+}
 app.engine('.hbs', expressHbs.engine({
   extname: "hbs",
-  defaultLayout: 'home',
-  layoutsDir: 'views/',
-}));
-app.get('/signin', (req, res) => {
-  res.render('defaultView', {
-    layout: 'signin',
-  })
+  defaultLayout: 'main',
+  layoutsDir: "views/layouts/"
+}))
+app.set('view engine', '.hbs')
+
+app.get('/', (req,res) =>{
+  res.render('dangky')
 })
-app.get('/quantri', (req, res) => {
-  res.render('defaultView', {
-    layout: 'quantri',
-  })
+app.get('/signup', async (req, res) => {
+	await mongoose.connect(uri, {
+		useNewUrlParser: true,
+		useUnifiedTopology: true,
+	});
+	const username = req.query.tennd;
+	const password = req.query.mk;
+	console.log(username);
+
+	user.findOne({
+		ten: username,
+	})
+		.then(data => {
+			if (data) {
+				console.log('tài khoản đã tồn tại')
+			} else {
+				return user.create({
+					ten: username,
+					matkhau: password,
+					
+
+				})
+					.then(data => {
+						console.log('thành công')
+						res.render('dangnhap')
+					})
+			}
+		})
+		.catch(err => {
+			res.status(500).json('tạo thất bại');
+		})
 })
-app.set('view engine', '.hbs');
+app.get('/signinin', async function (req, res) {
+	await mongoose.connect(uri, {
+		useNewUrlParser: true,
+		useUnifiedTopology: true,
+	});
+	const name = req.query.username;
+	const password = req.query.pass;
+	user.findOne({
+		ten: name,
+		matkhau: password,
+	})
+		.then(async data => {
+			if (data) {
+				// req.session.user = data;
+				const productList = await ProductModel.find().lean();
+				res.redirect('listproduct')
+			} else {
+				res.json('Thất bại')
+			}
+		})
 
-app.post('/signin', (req, res) => {
-  let dataUser = req.body
-  fs.readFile('userData.json', function (err, data) {
 
-      let obj = JSON.parse(data)
-      let da = fs.readFileSync('userData.json')
-      let myData = JSON.parse(da)
-      let arr = dataUser.imgRes.split('.')
-      let newFilename = arr[0] + '-' + Date.now() + '.' + arr[1]
-      let newObj = { "id": obj[obj.length - 1].id + 1, "email": dataUser.emailRes, "name": dataUser.nameRes, "pass": dataUser.passRes}
-      myData.push(newObj)
-      let newData = JSON.stringify(myData)
-      fs.writeFile('userData.json', newData, function (err) {
-          if (err) throw err;
-          // upload(req, res, function (err) {
-          //     console.log('thanh cong');
-          // })
-          res.render('home', { layout: 'signin', wrong: false })
-      })
-      console.log(myData);
-  })
-})
+	// Save user in session
 
-// app.get('/addNew', (req, res) => {
-//   let emailRes = req.query.emailRes
-//   let passRes = req.query.passRes
-//   let nameRes = req.query.nameRes
-//   let imgRes = req.query.imgRes
-//   fs.readFile('userData.json', function (err, data) {
-//       let obj = JSON.parse(data)
-//       let da = fs.readFileSync('userData.json')
-//       let myData = JSON.parse(da)
-//       let newObj = { "id": obj[obj.length - 1].id + 1, "email": emailRes, "name": nameRes, "pass": passRes, "image": imgRes }
-//       myData.push(newObj)
-//       let newData = JSON.stringify(myData)
-//       fs.writeFile('userData.json', newData, function (err) {
-//           if (err) throw err;
-//           res.redirect('/listUsers')
-//       })
-
-//   })
-// })
-
-// app.get('/listUsers', (req, res) => {
-//   let emailUser = req.query.email
-//   let passUser = req.query.password
-//   let nameUser = req.query.name
-//   let imgUser = req.query.img
-//   let userNum = req.query.userNum
-//   fs.readFile('userData.json', function (err, data) {
-//       if (!userNum) {
-//           let obj = JSON.parse(data)
-//           res.render('home', { layout: 'login', userData: obj })
-//       } else {
-//           let da = fs.readFileSync('userData.json')
-//           let myData = JSON.parse(da)
-//           for (let i = 0; i < myData.length; i++) {
-//               if (myData[i].id == userNum) {
-//                   myData[i].email = emailUser
-//                   myData[i].pass = passUser
-//                   myData[i].name = nameUser
-//                   myData[i].image = imgUser
-//                   break
-//               }
-//           }
-//           let newData = JSON.stringify(myData)
-//           fs.writeFile('userData.json', newData, function (err) {
-//               if (err) throw err;
-//               res.redirect('/listUsers')
-//           })
-//       }
-//   })
-// })
-
-// app.get('/login', (req, res) => {
-//   let email = req.query.email
-//   let pass = req.query.password
-//   let check = false
-//   fs.readFile('usersData.json', function (err, data) {
-//       // if (err) throw err
-//       let obj = JSON.parse(data)
-//       for (let i = 0; i < obj.length; i++) {
-//           if (email == obj[i].email && pass == obj[i].pass) {
-//               check = true
-//           }
-//       }
-//       if (check) {
-//           res.render('home', { layout: 'main', userData: obj })
-//       } else {
-//           res.render('login', { layout: 'main', wrong: true })
-//       }
-//   })
-// })
-
-// app.get('/listPrs', (req, res) => {
-//   let namePr = req.query.namePr
-//   let pricePr = req.query.pricePr
-//   let imgPr = req.query.imgPr
-//   let colorPr = req.query.clPr
-//   let typePr = req.query.tPr
-//   let idUser = req.query.idKHPr
-//   let prNum = req.query.prNum
-//   let newUser
-//   fs.readFile('productdata.json', function (err, data) {
-//       if (!prNum) {
-//           let obj = JSON.parse(data)
-//           res.render('listProduct', { layout: 'main', prData: obj })
-//       } else {
-//           let da = fs.readFileSync('productdata.json')
-//           let myData = JSON.parse(da)
-//           for (let i = 0; i < myData.length; i++) {
-//               if (myData[i].id == prNum) {
-//                   fs.readFile('usersData.json', function (err, data) {
-//                       let daU = fs.readFileSync('usersData.json')
-//                       let myDataU = JSON.parse(daU)
-//                       for (let j = 0; j < myDataU.length; j++) {
-//                           if (myDataU[j].id == idUser) {
-//                               myData[i].namePr = namePr
-//                               myData[i].price = parseInt(pricePr)
-//                               myData[i].imgPr = imgPr
-//                               myData[i].color = colorPr
-//                               myData[i].type = typePr
-//                               myData[i].idUser = parseInt(idUser)
-//                               myData[i].nameUser = myDataU[j].name
-//                               console.log("ok vao day" + myData[i].price);
-//                               let newData = JSON.stringify(myData)
-//                               fs.writeFile('productdata.json', newData, function (err) {
-//                                   if (err) throw err;
-//                                   res.redirect('/listPrs')
-//                               })
-//                               break
-//                           }
-//                           res.redirect('/listPrs')
-//                           break
-
-//                       }
-//                       console.log(namePr + " va " + pricePr);
-//                   })
-//               }
-//           }
-//       }
-
-//   })
-
-// })
-// app.get('/addNewPr', (req, res) => {
-//   res.render('addproduct', { layout: 'addproduct' })
-// })
-// app.post('/addNewPr/done', (req, res) => {
-//   fs.readFile('productdata.json', function (err, data) {
-//       let newPr = req.body
-//       let obj = JSON.parse(data)
-//       let da = fs.readFileSync('productdata.json')
-//       let myData = JSON.parse(da)
-//       fs.readFile('usersData.json', function (err, data) {
-//           let daU = fs.readFileSync('usersData.json')
-//           let myDataU = JSON.parse(daU)
-//           for (let j = 0; j < myDataU.length; j++) {
-//               if (myDataU[j].id == newPr.idKHPr) {
-//                   let newObj = { "id": obj[obj.length - 1].id + 1, "namePr": newPr.namePr, "price": newPr.pricePr, "imgPr": newPr.imgPr, "color": newPr.clPr, "type": newPr.tPr, "idUser": parseInt(newPr.idKHPr), "nameUser": myDataU[j].name }
-//                   myData.push(newObj)
-//                   console.log(myData);
-//                   let newData = JSON.stringify(myData)
-//                   fs.writeFile('productdata.json', newData, function (err) {
-//                       if (err) throw err;
-//                       res.redirect('/listPrs')
-//                   })
-//                   break
-//               }
-//           }
-//           console.log(newPr);
-
-//       })
-//   })
-// })
-app.get('/login', function (req, res) {
-  var username = req.query.user;
-  var password = req.query.pass;
-  
-  if (username == "admin" && password == "123") {
-    res.render('login', {
-      layout: 'quantri.hbs',
-    })
-  } else {
-    res.send('sai user hoac mk')
+});
+app.get('/listproduct', async (req, res) => {
+  try {
+      await mongoose.connect(uri)
+      const listPr = await ProductModel.find().lean()
+      res.render('listproduct', { prData: listPr })
+  } catch (error) {
+      console.log(error);
   }
-});
+})
+
+app.get('/add_pr', async(req, res) =>{
+  let namePr = req.query.tensp
+  let pricePr = parseInt(req.query.giasp)
+  let imgPr = req.query.imgPr
+  let colorPr = req.query.mausac
+  let typePr = req.query.loaisp
+  let nameUser = req.query.tenkh
+  let pr = new ProductModel({
+    tensp: namePr,
+    dongia: pricePr,
+    mausac: colorPr,
+    loaisp: typePr,
+    tenkh: nameUser
+  })
+    try {
+        await pr.save()
+        res.redirect('/listproduct')
+    } catch (error) {
+    }
+
+})
+app.get('/deletePr', async (req, res) => {
+  let idPr = req.query.prDelete
+  try {
+    ProductModel.collection.deleteOne({ _id: new mongodb.ObjectId(`${idPr}`) })
+      res.redirect('/listproduct')
+  } catch (error) {
+  }
+  console.log(idPr);
+})
+app.get('/up_pr', async (req, res) => {
+  let idUp = req.query.prUpdate
+  // // let nvNew = await nhanvienModel.find({_id: new mongodb.ObjectId(`${idUp}`)})
+  // console.log(idUp);
+  try {
+      const listPr = await ProductModel.find().lean()
+      let prUp = await ProductModel.find({ _id: new mongodb.ObjectId(`${idUp}`) }).lean()
+      res.render('updateProduct', { prData: listPr, pr: prUp[0], index: idUp })
+  } catch (error) {
+      console.log(error);
+  }
+})
+app.get('/up_pr/update', async (req, res) => {
+  let namePrup = req.query.tensp
+  let pricePrUp = parseInt(req.query.giasp)
+  let colorPrUp = req.query.mausac
+  let typePrUp = req.query.loaisp
+  let prNameKHUp = req.query.tenkh
+  let idPr = req.query.idPr
+  try {
+      await mongoose.connect(uri)
+      await ProductModel.collection.updateOne({ _id: new mongodb.ObjectId(`${idPr}`)}, { $set: { tensp: namePrup, dongia: pricePrUp, mausac: colorPrUp, loaisp: typePrUp, tenkh: prNameKHUp } })
+      res.redirect('/listproduct')        
+  } catch (error) {
+      
+  }
+})
+app.get('/listuser', async (req, res) => {
+  try {
+      await mongoose.connect(uri)
+      const listUs = await user.find().lean()
+      res.render('listUser', { dataUser: listUs })
+  } catch (error) {
+      console.log(error);
+  }
+})
+app.get('/add_user', async(req, res) =>{
+  let name = req.query.ten
+  let pass = req.query.matkhau
+  
+  let us = new user({
+    ten: name,
+    matkhau:pass,
+  })
+    try {
+        await us.save()
+        console.log(name)
+        res.redirect('/listuser')
+    } catch (error) {
+    }
+
+})
+app.get('/deleteUser', async (req, res) => {
+  let idUs = req.query.usDelete
+  try {
+    user.collection.deleteOne({ _id: new mongodb.ObjectId(`${idUs}`) })
+      res.redirect('/listuser')
+  } catch (error) {
+  }
+  console.log(idUs);
+})
+app.get('/up_us', async (req, res) => {
+  let idUp = req.query.usUpdate
+  // // let nvNew = await nhanvienModel.find({_id: new mongodb.ObjectId(`${idUp}`)})
+  // console.log(idUp);
+  try {
+      const listUs = await user.find().lean()
+      let usUp = await user.find({ _id: new mongodb.ObjectId(`${idUp}`) }).lean()
+      res.render('updateUser', { dataUser: listUs, us: usUp[0], index: idUp })
+  } catch (error) {
+      console.log(error);
+  }
+})
+app.get('/up_us/update', async (req, res) => {
+  let name = req.query.ten
+  let pass = req.query.matkhau
+  let idUs = req.query.idUs
+  try {
+      await mongoose.connect(uri)
+      await user.collection.updateOne({ _id: new mongodb.ObjectId(`${idUs}`)}, { $set: { ten: name, matkhau: pass} })
+      res.redirect('/listuser')        
+  } catch (error) {
+      
+  }
+})
 app.use(express.static(__dirname + "/images"));
-app.listen(port, () => {
-  console.log(`Exemple app listening on port ${port}`)
-});
+app.listen(8000, (req, res) => {
+  console.log("Dang chay");
+})
